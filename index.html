@@ -2,12 +2,12 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบบริหารจัดการตัวอย่างดิน - กลุ่มวิจัยเคมีดิน</title>
     
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,729 +17,477 @@
     <!-- Custom Style -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        
         body { 
             font-family: 'Sarabun', sans-serif; 
-            background-color: #f8fafc; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent;
         }
-        .btn-primary { @apply bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded transition-all duration-200 shadow-sm; }
-        .btn-secondary { @apply bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition-all duration-200 shadow-sm; }
-        .btn-danger { @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-all duration-200 shadow-sm; }
-        
-        .status-badge { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 40; display: flex; align-items: center; gap: 8px; }
-        .status-online { background-color: #10b981; color: white; }
-        
-        .nav-item.active { background-color: #059669; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .nav-item-highlight { background-color: #fffbeb; color: #92400e; border: 1px solid #fcd34d; font-weight: bold; }
-        .nav-item-highlight:hover { background-color: #fef3c7; }
-        .nav-item-highlight.active { background-color: #d97706; color: white; border-color: #b45309; }
 
-        .item-checkbox { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #10b981; }
+        /* Modern Gradient Buttons */
+        .btn { @apply px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2; }
+        .btn-primary { @apply bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/20; }
+        .btn-secondary { @apply bg-white text-slate-600 border border-slate-200 hover:bg-slate-50; }
+        .btn-danger { @apply bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-red-500/20; }
+        .btn-sync { @apply bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white shadow-orange-500/20; }
+
+        /* Navigation Styles */
+        .nav-section-title { @apply text-[10px] font-bold text-slate-500 uppercase tracking-widest px-6 mt-6 mb-2 opacity-80; }
+        .nav-item { 
+            @apply w-full text-left px-5 py-3.5 rounded-2xl flex items-center gap-4 transition-all duration-200 text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 mb-1.5 font-medium cursor-pointer text-sm;
+        }
+        .nav-item.active { 
+            @apply bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 font-bold transform scale-[1.02]; 
+        }
+        .nav-item i { @apply w-6 text-center text-lg transition-transform duration-200 group-hover:scale-110; }
+
+        /* Components */
+        .status-badge { @apply fixed bottom-4 right-4 px-4 py-2 rounded-full text-xs font-bold shadow-lg z-50 flex items-center gap-2 backdrop-blur-md bg-emerald-600/90 text-white border border-emerald-500; }
+        .item-checkbox { @apply w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer; }
+        .table-responsive { @apply overflow-x-auto rounded-2xl shadow-sm border border-slate-200 bg-white min-w-full; }
+        
+        /* Animation */
         #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .table-responsive { overflow-x: auto; background-color: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-gray-800 h-screen flex overflow-hidden">
+<body class="text-slate-800 h-screen flex overflow-hidden">
 
-    <!-- Mobile Navigation Overlay -->
-    <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar Menu -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-800 text-white flex-col flex z-50 transform -translate-x-full md:translate-x-0 md:relative shadow-2xl">
-        <div class="p-6 border-b border-slate-700 flex items-center space-x-3">
-            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <i class="fa-solid fa-flask-vial text-xl"></i>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-[#0f172a] text-white flex-col flex z-50 transform -translate-x-full md:translate-x-0 md:relative shadow-2xl z-[60] border-r border-slate-800">
+        <!-- Logo Area -->
+        <div class="p-8 border-b border-slate-800 flex items-center gap-4">
+            <div class="relative w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0 transform hover:rotate-6 transition-transform duration-300">
+                <i class="fa-solid fa-flask text-white/30 text-4xl absolute"></i>
+                <i class="fa-solid fa-seedling text-2xl text-white relative z-10"></i>
             </div>
             <div>
-                <h1 class="font-bold text-lg leading-tight">Soilsheif Pro</h1>
-                <p class="text-xs text-slate-400">Soil Research Group</p>
+                <h1 class="font-bold text-lg leading-tight tracking-tight text-white">Soil Lab <span class="text-emerald-400">Pro</span></h1>
+                <p class="text-[10px] text-slate-400 mt-1 font-medium tracking-wide">Soil Chemistry Research</p>
             </div>
         </div>
         
-        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto" id="nav-container">
-            <!-- JavaScript will inject navigation items here -->
-        </nav>
+        <nav class="flex-1 px-4 py-4 overflow-y-auto custom-scroll" id="nav-container"></nav>
         
-        <div class="p-4 border-t border-slate-700 bg-slate-800/50">
-            <div class="flex items-center space-x-3 mb-4 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition-colors" onclick="router('profile')">
-                <div class="w-9 h-9 bg-emerald-600 rounded-full flex items-center justify-center font-bold border-2 border-slate-600" id="user-avatar">U</div>
+        <div class="p-6 border-t border-slate-800 bg-slate-900/50">
+            <div class="flex items-center gap-4 mb-4 cursor-pointer hover:bg-slate-800 p-3 rounded-2xl transition-all group" onclick="router('profile')">
+                <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center font-bold text-lg text-emerald-400 border-2 border-slate-600 group-hover:border-emerald-500 transition-all shadow-md" id="user-avatar">U</div>
                 <div class="flex-1 overflow-hidden">
-                    <p id="nav-username" class="text-sm font-semibold truncate">Guest</p>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Account Settings</p>
+                    <p id="nav-username" class="text-base font-bold truncate text-slate-200">Guest</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider group-hover:text-emerald-400 transition-colors">แตะเพื่อแก้ไข</p>
                 </div>
             </div>
-            <button onclick="logout()" class="w-full bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 border border-red-600/20">
-                <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+            <button onclick="logout()" class="w-full bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-transparent group">
+                <i class="fa-solid fa-power-off group-hover:scale-110 transition-transform"></i> ออกจากระบบ
             </button>
         </div>
     </aside>
 
-    <!-- Content Main Area -->
-    <main class="flex-1 flex flex-col overflow-hidden relative w-full">
-        <!-- Header Nav -->
-        <header class="bg-white border-b border-slate-200 p-4 flex justify-between items-center z-20">
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full bg-[#f8fafc]">
+        <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center z-20 sticky top-0 shadow-sm">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="text-slate-600 p-2 rounded-lg hover:bg-slate-100 md:hidden">
-                    <i class="fa-solid fa-bars-staggered text-xl"></i>
+                <button onclick="toggleSidebar()" class="text-slate-500 p-2.5 rounded-xl hover:bg-slate-100 md:hidden active:bg-slate-200 transition-colors">
+                    <i class="fa-solid fa-bars-staggered text-2xl"></i>
                 </button>
-                <div id="header-title" class="font-bold text-slate-800 text-lg md:text-xl">
-                    Dashboard Overview
-                </div>
+                <div id="header-title" class="font-extrabold text-slate-800 text-xl md:text-2xl truncate tracking-tight">Dashboard</div>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:block text-right">
-                    <p class="text-xs text-slate-400 font-medium">SERVER TIME</p>
-                    <p class="text-sm text-slate-700 font-bold" id="clock">00:00:00</p>
+            <div class="flex items-center gap-3">
+                <div class="hidden sm:block text-right mr-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-bold tracking-wider">SERVER TIME</p>
+                    <p class="text-sm text-slate-600 font-mono font-bold" id="clock">00:00:00</p>
                 </div>
             </div>
         </header>
         
-        <!-- Application Content -->
-        <div id="content-area" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
-            <!-- Dynamic Content -->
-        </div>
+        <div id="content-area" class="flex-1 overflow-y-auto p-4 md:p-8 pb-32 relative scroll-smooth custom-scroll"></div>
 
-        <!-- Connection Badge -->
-        <div id="status-badge" class="status-badge status-online">
-            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>ออนไลน์ (Server)</span>
+        <div id="status-badge" class="status-badge">
+            <div class="w-2.5 h-2.5 bg-white rounded-full animate-pulse shadow-md"></div>
+            <span class="tracking-wide">Online</span>
         </div>
     </main>
 
-    <!-- Global Loading -->
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center">
-            <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-slate-800 font-bold text-lg" id="loading-text">กำลังโหลดข้อมูล...</p>
+    <!-- Loading -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[200] flex items-center justify-center hidden transition-opacity duration-300">
+        <div class="bg-white p-10 rounded-[2rem] shadow-2xl flex flex-col items-center max-w-sm w-[90%] transform scale-100">
+            <div class="relative w-20 h-20 mb-6">
+                 <div class="absolute inset-0 border-[6px] border-slate-100 rounded-full"></div>
+                 <div class="absolute inset-0 border-[6px] border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                 <i class="fa-solid fa-flask absolute inset-0 m-auto text-emerald-500 text-xl flex items-center justify-center opacity-50"></i>
+            </div>
+            <p class="text-slate-700 font-bold text-xl animate-pulse" id="loading-text">กำลังโหลดข้อมูล...</p>
         </div>
     </div>
-
-    <!-- Modals -->
     <div id="modal-container"></div>
 
-    <!-- Login/Auth Screen -->
-    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
-            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 text-white text-center">
-                <i class="fa-solid fa-flask-vial text-5xl mb-4"></i>
-                <h2 class="text-3xl font-bold">กลุ่มวิจัยเคมีดิน</h2>
-                <p class="text-emerald-100/80 text-sm mt-1">Soilsheif Lab Management System</p>
+    <!-- Login -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden flex flex-col relative transition-all">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-600"></div>
+            <div class="p-10 pb-0 text-center">
+                <div class="w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl mx-auto flex items-center justify-center mb-6 shadow-inner ring-4 ring-white">
+                    <i class="fa-solid fa-flask-vial text-5xl text-emerald-600 drop-shadow-sm"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">กลุ่มวิจัยเคมีดิน</h2>
+                <p class="text-slate-500 text-base mt-2 font-medium">Soil Chemistry Research Group</p>
             </div>
-            <div class="p-8">
-                <div class="flex mb-8 bg-slate-100 p-1 rounded-xl">
-                    <button onclick="showLoginTab('login')" id="tab-login" class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all bg-white text-emerald-700 shadow-sm">เข้าสู่ระบบ</button>
-                    <button onclick="showLoginTab('register')" id="tab-register" class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all text-slate-500 hover:text-emerald-600">ลงทะเบียน</button>
+            <div class="p-10 pt-8">
+                <div class="flex mb-6 bg-slate-100 p-1.5 rounded-xl">
+                    <button onclick="showLoginTab('login')" id="tab-login" class="flex-1 py-3 rounded-xl text-sm font-bold transition-all shadow-sm">เข้าสู่ระบบ</button>
+                    <button onclick="showLoginTab('register')" id="tab-register" class="flex-1 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-emerald-600">ลงทะเบียน</button>
                 </div>
                 
-                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-6">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">ชื่อผู้ใช้ (Username)</label>
-                        <input type="text" id="login-user" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" required>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2">ชื่อผู้ใช้</label>
+                        <input type="text" id="login-user" class="w-full pl-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700" placeholder="Username" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">รหัสผ่าน (Password)</label>
-                        <input type="password" id="login-pass" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" required>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2">รหัสผ่าน</label>
+                        <input type="password" id="login-pass" class="w-full pl-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700" placeholder="Password" required>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <label class="flex items-center cursor-pointer group">
-                            <input type="checkbox" id="remember-me" class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                            <span class="ml-2 text-sm text-slate-600 group-hover:text-emerald-700 transition-colors">จำการเข้าระบบ</span>
-                        </label>
+                    <div class="flex items-center pt-2">
+                        <input type="checkbox" id="remember-me" class="w-5 h-5 rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                        <span class="ml-3 text-sm font-medium text-slate-600 cursor-pointer select-none" onclick="document.getElementById('remember-me').click()">จำการเข้าระบบไว้</span>
                     </div>
-                    <div id="login-error-msg" class="hidden bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-center text-sm font-medium animate-bounce">
-                        ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง
+                    <div id="login-error-msg" class="hidden bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl text-center text-sm font-bold flex items-center justify-center gap-3 animate-pulse">
+                        <i class="fa-solid fa-circle-exclamation text-lg"></i> ข้อมูลไม่ถูกต้อง
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]">
-                        เข้าสู่ระบบ
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-4 rounded-2xl transition-all shadow-xl shadow-emerald-500/30 active:scale-[0.98] mt-4 flex justify-center items-center gap-2">
+                        <span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
-
                 <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชื่อผู้ใช้</label>
-                        <input type="text" id="reg-user" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" required>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">รหัสผ่าน</label>
-                            <input type="password" id="reg-pass" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยืนยันรหัส</label>
-                            <input type="password" id="reg-pass-confirm" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชื่อ-นามสกุล</label>
-                        <input type="text" id="reg-name" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">กลุ่มงาน</label>
-                        <select id="reg-group" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="ฝ่ายบริหารทั่วไป">ฝ่ายบริหารทั่วไป</option>
-                            <option value="กลุ่มวิจัยเคมีดิน">กลุ่มวิจัยเคมีดิน</option>
-                            <option value="กลุ่มวิจัยกายภาพดิน">กลุ่มวิจัยกายภาพดิน</option>
-                            <option value="กลุ่มวิจัยสิ่งแวดล้อม">กลุ่มวิจัยสิ่งแวดล้อม</option>
-                            <option value="กลุ่มวิเคราะห์ วิจัย พืช ปุ๋ย และสิ่งปรับปรุงดิน">กลุ่มวิเคราะห์ วิจัย พืช ปุ๋ย และสิ่งปรับปรุงดิน</option>
-                            <option value="กลุ่มวิจัยแร่และจุลสัณฐานดิน">กลุ่มวิจัยแร่และจุลสัณฐานดิน</option>
-                            <option value="กลุ่มมาตรฐานและพัฒนาระบบการวิเคราะห์">กลุ่มมาตรฐานและพัฒนาระบบการวิเคราะห์</option>
-                            <option value="กลุ่มวิทยบริการ">กลุ่มวิทยบริการ</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all">ลงทะเบียนบัญชีใหม่</button>
+                    <div class="text-center text-slate-500 py-6 font-medium">กรุณาติดต่อ Admin เพื่อขอรหัสลงทะเบียน</div>
+                    <button type="button" onclick="showLoginTab('login')" class="w-full border-2 border-slate-200 text-slate-600 font-bold py-3.5 rounded-2xl hover:bg-slate-50 transition-all">กลับไปหน้าล็อกอิน</button>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. CONFIGURATION
-        // ==========================================
+        // --- 1. CONFIGURATION ---
         const API_URL = "https://script.google.com/macros/s/AKfycbzb3O1kWnyJtD7jPor_rfnJOrD9df1Jzjb66QtBXeIzgyKZHXRq8FramTk6RGptFCRKLQ/exec";
         const SECONDARY_DB_URL = "https://docs.google.com/spreadsheets/d/1mPcLcY-vC3_xpSg8BKYplGoENP4U_koiOgiUKu33P4Q/edit?gid=418256453#gid=418256453";
         const DEPARTMENTS = ["ฝ่ายบริหารทั่วไป", "กลุ่มวิจัยเคมีดิน", "กลุ่มวิจัยกายภาพดิน", "กลุ่มวิจัยสิ่งแวดล้อม", "กลุ่มวิเคราะห์ วิจัย พืช ปุ๋ย และสิ่งปรับปรุงดิน", "กลุ่มวิจัยแร่และจุลสัณฐานดิน", "กลุ่มมาตรฐานและพัฒนาระบบการวิเคราะห์", "กลุ่มวิทยบริการ"];
         
-        let isRealMode = true; // PRODUCTION MODE
-        let currentUser = null;
-        let items = [];
-        let events = [];
-        let userList = [];
-        let docSettings = {};
+        let isRealMode = true;
+        let currentUser = null, items = [], events = [], userList = [], docSettings = {};
+        let currentView = 'dashboard', currentPage = 1, searchTerm = '', rowsPerPage = 20;
+        let statusChartInst = null, rsChartInst = null, rrChartInst = null, repChartInst = null;
+
+        // --- 2. GLOBAL HELPER FUNCTIONS ---
+        function showLoading(text="กำลังประมวลผล...") {
+            const o = document.getElementById('loading-overlay');
+            if (o) { document.getElementById('loading-text').textContent=text; o.classList.remove('hidden'); }
+        }
+        function hideLoading() { document.getElementById('loading-overlay')?.classList.add('hidden'); }
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
+        }
+        function closeSidebar() { const sb=document.getElementById('sidebar'); if(!sb.classList.contains('-translate-x-full') && window.innerWidth<768){sb.classList.add('-translate-x-full');document.getElementById('mobile-overlay').classList.add('hidden');} }
+        function updateStatusBadge() { document.getElementById('status-badge')?.classList.remove('hidden'); }
         
-        let currentView = 'dashboard';
-        let currentPage = 1;
-        let searchTerm = '';
-        let rowsPerPage = 20;
-
-        // Chart References
-        let statusChartInst = null;
-        let rsChartInst = null;
-        let rrChartInst = null;
-        let repChartInst = null;
-        let uaChartInst = null;
-
-        // ==========================================
-        // 2. HELPER FUNCTIONS
-        // ==========================================
-        function showLoading(text = "กำลังโหลดข้อมูล...") {
-            const overlay = document.getElementById('loading-overlay');
-            const txt = document.getElementById('loading-text');
-            if (overlay && txt) {
-                txt.textContent = text;
-                overlay.classList.remove('hidden');
-            }
+        function formatDateTh(ds,t=true) { 
+            if(!ds) return '-'; const d=new Date(ds); return isNaN(d) ? ds : d.toLocaleString('th-TH', {year:'numeric',month:'short',day:'numeric'}); 
+        }
+        function formatDateForPDF(ds) { 
+            if(!ds) return '-'; const d=new Date(ds); return isNaN(d) ? ds : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; 
+        }
+        function calculateDaysRemaining(dr) { 
+            if(!dr) return -1; const d=new Date(dr); return Math.ceil(Math.abs(new Date()-d)/(1000*60*60*24)); 
+        }
+        function getUserInfo(u) { if(u==='admin')return {name:'Admin System',group:'IT Support'}; const f=userList.find(x=>x.username===u); return f?{name:f.name,group:f.group}:{name:u,group:'-'}; }
+        
+        function updateRowsPerPage(v) { rowsPerPage=parseInt(v); currentPage=1; renderContent(); }
+        function changePage(n) { currentPage=n; updateTableData(); }
+        function handleSearch(v) { searchTerm=v.toLowerCase(); currentPage=1; updateTableData(); }
+        
+        function renderPagination(total, funcName) { 
+            const pages = Math.ceil(total / rowsPerPage); if(pages <= 1) return ''; 
+            return `<div class="flex justify-center items-center gap-3 mt-8 pb-4">
+                <button onclick="${funcName}(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''} class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-emerald-50 text-emerald-600 transition-all shadow-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                <span class="text-sm font-bold text-slate-600 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">หน้า ${currentPage} / ${pages}</span>
+                <button onclick="${funcName}(${currentPage + 1})" ${currentPage === pages ? 'disabled class="opacity-50 cursor-not-allowed"' : ''} class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-emerald-50 text-emerald-600 transition-all shadow-sm"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>`; 
         }
 
-        function hideLoading() {
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) overlay.classList.add('hidden');
+        async function loadThaiFont(doc) {
+            try { const res = await fetch("https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf"); const blob = await res.blob(); const reader = new FileReader(); return new Promise(resolve => { reader.onload = function() { doc.addFileToVFS('Sarabun-Regular.ttf', reader.result.split(',')[1]); doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal'); doc.setFont('Sarabun'); resolve(); }; reader.readAsDataURL(blob); }); } catch(e) { alert("Font Error"); }
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
-                sidebar.classList.add('-translate-x-full');
-                document.getElementById('mobile-overlay').classList.add('hidden');
-            }
-        }
-
-        function updateStatusBadge() {
-            const badge = document.getElementById('status-badge');
-            if (badge) {
-                badge.classList.remove('hidden');
-            }
-        }
-
-        function formatDateTh(dateString, includeTime = true) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            if (includeTime) {
-                options.hour = '2-digit';
-                options.minute = '2-digit';
-                options.hour12 = false;
-            }
-            return date.toLocaleString('th-TH', options);
-        }
-
-        function formatDateForPDF(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
-        }
-
-        function calculateDaysRemaining(dateReported) {
-            if (!dateReported) return -1;
-            const reported = new Date(dateReported);
-            const now = new Date();
-            const diffTime = Math.abs(now - reported);
-            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-
-        function getUserInfo(username) {
-            if (username === 'admin') return { name: 'Admin System', group: 'IT Support' };
-            const u = userList.find(user => user.username === username);
-            return u ? { name: u.name, group: u.group } : { name: username, group: '-' };
-        }
-
-        function updateRowsPerPage(val) {
-            rowsPerPage = parseInt(val);
-            currentPage = 1;
-            renderContent();
-        }
-
-        function changePage(n) {
-            currentPage = n;
-            updateTableData();
-        }
-
-        function handleSearch(t) {
-            searchTerm = t.toLowerCase();
-            currentPage = 1;
-            updateTableData();
-        }
-
-        // ** Added Missing Function **
-        function updateNavAndRedirect() {
-            renderSidebar();
-            if(currentUser) {
-                document.getElementById('nav-username').textContent = currentUser.name;
-                document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
-            }
-            refreshData().then(() => router('dashboard'));
-        }
-
-        function updateNavUser() {
-            if (currentUser) document.getElementById('nav-username').textContent = currentUser.name;
-        }
-
-        function showLoginTab(tab) {
-            document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
-            document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
-            document.getElementById('tab-login').className = tab === 'login' ? "flex-1 py-2.5 rounded-lg text-sm font-bold bg-white text-emerald-700 shadow-sm" : "flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-500";
-            document.getElementById('tab-register').className = tab === 'register' ? "flex-1 py-2.5 rounded-lg text-sm font-bold bg-white text-emerald-700 shadow-sm" : "flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-500";
-        }
-
-        function logout() {
-            localStorage.removeItem('soilAppUser');
-            location.reload();
-        }
-
-        // --- 3. API COMMUNICATION ---
-        async function apiCall(action, payload = {}, showSpinner = true) {
-            if (showSpinner) showLoading();
+        // --- 3. API & DATA ---
+        async function apiCall(action, payload={}, showSpinner=true) {
+            if(showSpinner) showLoading();
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); 
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action, ...payload }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-                
-                const text = await response.text();
-                const data = JSON.parse(text);
-                
-                if (showSpinner) hideLoading();
-                return data;
-            } catch (e) {
-                if (showSpinner) hideLoading();
-                console.error("API Call Error:", e);
-                return { status: 'error', message: e.name === 'AbortError' ? "การเชื่อมต่อหมดเวลา" : e.message };
+                const c = new AbortController(); setTimeout(()=>c.abort(),60000);
+                const r = await fetch(API_URL, { method:'POST', redirect:'follow', body:JSON.stringify({action,...payload}), signal:c.signal });
+                const d = await r.json();
+                if(showSpinner) hideLoading();
+                return d;
+            } catch(e) {
+                if(showSpinner) hideLoading();
+                console.error(e);
+                return {status:'error', message:e.message};
             }
         }
 
         async function refreshData() {
             try {
-                const [iRes, eRes, uRes, sRes] = await Promise.all([
-                    apiCall('getItems', {}, false),
-                    apiCall('getHistory', {}, false),
-                    apiCall('getUsers', {}, false),
-                    apiCall('getSettings', {}, false)
-                ]);
-
-                if (iRes.status === 'success') items = iRes.items || [];
-                if (eRes.status === 'success') events = eRes.events || [];
-                if (uRes.status === 'success') userList = uRes.users || [];
-                if (sRes.status === 'success') docSettings = sRes.settings || {};
-            } catch (err) {
-                console.error("Refresh Data Error:", err);
-            } finally {
-                hideLoading();
-            }
+                const [i,e,u,s] = await Promise.all([apiCall('getItems',{},false), apiCall('getHistory',{},false), apiCall('getUsers',{},false), apiCall('getSettings',{},false)]);
+                if(i.status==='success') items=i.items||[];
+                if(e.status==='success') events=e.events||[];
+                if(u.status==='success') userList=u.users||[];
+                if(s.status==='success') docSettings=s.settings||{};
+            } catch(err) { console.error(err); }
+            hideLoading();
         }
 
-        async function loadThaiFont(doc) {
-            try {
-                const res = await fetch("https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf");
-                if (!res.ok) throw new Error("Font fetch failed");
-                const blob = await res.blob();
-                const reader = new FileReader();
-                return new Promise(resolve => {
-                    reader.onload = function() {
-                        const base64 = reader.result.split(',')[1];
-                        doc.addFileToVFS('Sarabun-Regular.ttf', base64);
-                        doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal');
-                        doc.setFont('Sarabun');
-                        resolve();
-                    };
-                    reader.readAsDataURL(blob);
-                });
-            } catch (e) {
-                console.error("Error loading font:", e);
-                alert("ไม่สามารถโหลดฟอนต์ภาษาไทยได้");
+        // --- 4. NAVIGATION & AUTH ---
+        function updateNavUser() { 
+            if(currentUser) {
+                document.getElementById('nav-username').textContent=currentUser.name; 
+                document.getElementById('user-avatar').textContent=currentUser.name.charAt(0).toUpperCase();
             }
         }
+        function updateNavAndRedirect() { renderSidebar(); updateNavUser(); refreshData().then(() => router('dashboard')); }
+        function showLoginTab(t) {
+            document.getElementById('login-form').classList.toggle('hidden', t!=='login');
+            document.getElementById('register-form').classList.toggle('hidden', t!=='register');
+            document.getElementById('tab-login').className=t==='login'?"flex-1 py-3 rounded-xl text-sm font-bold bg-white text-emerald-700 shadow-sm":"flex-1 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
+            document.getElementById('tab-register').className=t==='register'?"flex-1 py-3 rounded-xl text-sm font-bold bg-white text-emerald-700 shadow-sm":"flex-1 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
+        }
+        function logout() { localStorage.removeItem('soilAppUser'); location.reload(); }
 
-        // --- 4. ACTION HANDLERS ---
+        // --- 5. ACTION HANDLERS ---
         async function handleLogin(e) {
             e.preventDefault();
-            document.getElementById('login-error-msg').classList.add('hidden');
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
-            const remember = document.getElementById('remember-me').checked;
-
-            showLoading("กำลังตรวจสอบข้อมูล...");
-            const res = await apiCall('login', { username: user, password: pass }, false);
-            if (res.status === 'success') {
-                showLoading("กำลังเข้าสู่ระบบ...");
+            const u = document.getElementById('login-user').value;
+            const p = document.getElementById('login-pass').value;
+            const res = await apiCall('login', {username:u, password:p});
+            if(res.status==='success') {
                 currentUser = res.user;
-                if (remember) localStorage.setItem('soilAppUser', JSON.stringify(currentUser));
-                
+                if(document.getElementById('remember-me').checked) localStorage.setItem('soilAppUser', JSON.stringify(currentUser));
                 document.getElementById('login-screen').classList.add('hidden');
                 updateNavAndRedirect();
             } else {
-                hideLoading();
-                const errorDiv = document.getElementById('login-error-msg');
-                errorDiv.querySelector('span').textContent = res.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
-                errorDiv.classList.remove('hidden');
+                document.getElementById('login-error-msg').classList.remove('hidden');
             }
         }
 
-        async function handleRegister(e) {
-            e.preventDefault();
-            const pass = document.getElementById('reg-pass').value;
-            const passConf = document.getElementById('reg-pass-confirm').value;
-
-            if (pass !== passConf) {
-                alert("รหัสผ่านไม่ตรงกัน");
-                return;
-            }
-            const payload = {
-                username: document.getElementById('reg-user').value,
-                password: pass,
-                name: document.getElementById('reg-name').value,
-                group: document.getElementById('reg-group').value
-            };
-            const res = await apiCall('register', payload);
-            if (res.status === 'success') {
-                alert('ลงทะเบียนสำเร็จ! โปรดแจ้ง Admin เพื่ออนุมัติ');
-                showLoginTab('login');
-            } else {
-                alert(res.message);
-            }
-        }
-
+        async function handleRegister(e) { e.preventDefault(); alert("กรุณาติดต่อ Admin"); }
         async function processTransaction(type, itemId) {
-            if (!itemId) return alert('รหัสสินค้าไม่ถูกต้อง');
-            const action = type === 'borrow' ? 'borrowItem' : 'returnItem';
-            const res = await apiCall(action, { itemId: itemId, username: currentUser.username });
-            if (res.status === 'success') {
-                alert('สำเร็จ');
-                await refreshData();
-                router('borrow');
-            } else {
-                alert(res.message);
+             const action = type==='borrow'?'borrowItem':'returnItem';
+             const res = await apiCall(action, {itemId, username:currentUser.username});
+             if(res.status==='success') { alert('สำเร็จ'); await refreshData(); router(type==='borrow'?'borrow':'return_items'); } else alert(res.message);
+        }
+        async function handleDisposeItem(id) { if(!confirm('ยืนยันดำเนินการ?')) return; const res=await apiCall('disposeItem',{id}); if(res.status==='success') { await refreshData(); router(currentView); } }
+        async function deleteItem(id) { if(confirm('ลบ?')) { await apiCall('deleteItem',{id}); await refreshData(); router(currentView); } }
+        async function deleteEvent(id) { if(confirm('ลบ?')) { await apiCall('deleteEvent',{id}); await refreshData(); router('history'); } }
+        async function deleteSelected(type) { const c=document.querySelectorAll('.item-checkbox:checked'); if(c.length===0)return; if(!confirm('ลบ?'))return; showLoading(); for(let i of c) { await apiCall(type==='event'?'deleteEvent':'deleteItem',{id:i.value},false); } hideLoading(); await refreshData(); router(currentView); }
+        async function handleProfileUpdate(e) { e.preventDefault(); const p={username:currentUser.username, name:document.getElementById('edit-name').value, group:document.getElementById('edit-group').value, password:document.getElementById('edit-pass').value||currentUser.password}; const res=await apiCall('updateProfile',p); if(res.status==='success') { currentUser.name=p.name; currentUser.group=p.group; localStorage.setItem('soilAppUser', JSON.stringify(currentUser)); alert('สำเร็จ'); updateNavUser(); } }
+        async function handleSaveItem(e, id) { e.preventDefault(); const p={id, receiptNo:document.getElementById('m-receipt').value, dateReceived:document.getElementById('m-date').value, qty:document.getElementById('m-qty').value, layer:document.getElementById('m-layer').value, params:document.getElementById('m-params').value, disposalPref:document.getElementById('m-pref').value}; const res=await apiCall(id?'editItem':'addItem',{item:p}); if(res.status==='success') { document.getElementById('modal-container').innerHTML=''; await refreshData(); router('items'); } }
+        // ** Sync Button Function **
+        async function syncExternalData() { if(confirm('ยืนยันการอัปเดตข้อมูลจาก Database สำรอง?')) { const res=await apiCall('syncExternalData',{url:SECONDARY_DB_URL}); alert(res.message); if(res.status==='success') { await refreshData(); router('items'); } } }
+        async function approveUser(u) { if(confirm('อนุมัติ?')) { await apiCall('approveUser',{username:u}); router('users'); } }
+        async function deleteUser(u) { if(confirm('ลบ?')) { await apiCall('deleteUser',{username:u}); router('users'); } }
+        async function toggleUserPermission(u,t,v) { await apiCall('toggleUserPermission',{username:u, type:t, value:v}); }
+
+        // --- 6. MODALS ---
+        function checkSelection(id) { const c=document.querySelectorAll('.item-checkbox:checked').length; const b=document.getElementById(id); if(b) c>0?b.classList.remove('hidden'):b.classList.add('hidden'); if(b && c>0) b.querySelector('span').textContent=c; }
+        function toggleAllItems(src, id) { document.querySelectorAll('.item-checkbox').forEach(c=>c.checked=src.checked); checkSelection(id); }
+        async function openReportDateModal(id, no) { document.getElementById('modal-container').innerHTML = `<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-xl p-6 w-full max-w-sm fade-in"><h3 class="font-bold text-xl mb-4 text-blue-700">ยืนยันผล</h3><p class="mb-4">เลขรับ: ${no}</p><input type="date" id="rep-date" class="w-full border p-2 mb-4"><div class="flex justify-end gap-2"><button onclick="document.getElementById('modal-container').innerHTML=''" class="px-4 text-gray-500">ยกเลิก</button><button onclick="confirmReport('${id}')" class="btn-primary">ยืนยัน</button></div></div></div>`; }
+        async function confirmReport(id) { const d=document.getElementById('rep-date').value; if(!d)return alert('เลือกวันที่'); const res=await apiCall('reportItem',{id, date:d}); if(res.status==='success') { document.getElementById('modal-container').innerHTML=''; await refreshData(); router('report'); } }
+        function openItemModal(item=null) { const isEdit=!!item; document.getElementById('modal-container').innerHTML = `<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-8 fade-in"><h3 class="text-2xl font-bold mb-6 text-slate-800">${isEdit?'แก้ไข':'เพิ่ม'}ตัวอย่าง</h3><form onsubmit="handleSaveItem(event, '${isEdit?item.id:''}')" class="space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold uppercase">เลขรับ</label><input type="text" id="m-receipt" value="${item?.receiptNo||''}" class="w-full border p-3 rounded-xl mt-1" required></div><div><label class="text-xs font-bold uppercase">วันที่รับ</label><input type="date" id="m-date" value="${item?.dateReceived?item.dateReceived.split('T')[0]:''}" class="w-full border p-3 rounded-xl mt-1" required></div></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold uppercase">จำนวน</label><input type="number" id="m-qty" value="${item?.qty||1}" class="w-full border p-3 rounded-xl mt-1" required></div><div><label class="text-xs font-bold uppercase">ชั้นเก็บ</label><input type="text" id="m-layer" value="${item?.layer?.replace(/'/g,'')||''}" class="w-full border p-3 rounded-xl mt-1"></div></div><div><label class="text-xs font-bold uppercase">พารามิเตอร์</label><input type="text" id="m-params" value="${item?.params||''}" class="w-full border p-3 rounded-xl mt-1"></div><div><label class="text-xs font-bold uppercase">ความต้องการ</label><select id="m-pref" class="w-full border p-3 rounded-xl mt-1"><option value="ทิ้ง" ${item?.disposalPref==='ทิ้ง'?'selected':''}>ทิ้ง</option><option value="รับคืน" ${item?.disposalPref==='รับคืน'?'selected':''}>รับคืน</option></select></div><div class="flex justify-end gap-3 mt-8"><button type="button" onclick="document.getElementById('modal-container').innerHTML=''" class="px-5 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl font-bold">ยกเลิก</button><button type="submit" class="btn-primary py-2.5 px-6 rounded-xl shadow-lg">บันทึก</button></div></form></div></div>`; }
+        async function openSettingsModal(k) { document.getElementById('modal-container').innerHTML=`<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div class="bg-white p-6 rounded-xl w-full max-w-sm fade-in"><h3 class="text-xl font-bold mb-4">ตั้งค่า PDF (${k})</h3><input id="f-left" class="w-full border p-2 mb-2" value="${docSettings[k]?.footerLeft||''}" placeholder="Left"><input id="f-right" class="w-full border p-2 mb-4" value="${docSettings[k]?.footerRight||''}" placeholder="Right"><div class="flex justify-end gap-2"><button onclick="document.getElementById('modal-container').innerHTML=''" class="px-4 text-gray-500">Close</button><button onclick="saveSettings('${k}')" class="btn-primary">Save</button></div></div></div>`; }
+        async function saveSettings(k) { docSettings[k]={footerLeft:document.getElementById('f-left').value, footerRight:document.getElementById('f-right').value}; await apiCall('saveSettings',{type:k, settings:docSettings[k]}, false); document.getElementById('modal-container').innerHTML=''; alert('บันทึกแล้ว'); }
+
+        // --- 7. EXPORT PDF ---
+        async function exportViewPDF() {
+            if (!window.jspdf) return alert('PDF Lib Not Ready');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF(currentView==='history'?'l':'p');
+            const settings = docSettings[currentView] || {};
+            await loadThaiFont(doc);
+
+            doc.setFontSize(22);
+            doc.text(currentView.toUpperCase().replace('_',' ')+" Report", 14, 25);
+            doc.setFontSize(10);
+            doc.text(`Date: ${formatDateForPDF(new Date().toISOString())} | By: ${currentUser.name}`, 14, 35);
+            
+            let head=[], body=[];
+            if(currentView==='items') { head=[["No","Qty","Layer","Date","Disp","Status"]]; body=items.map(i=>[i.receiptNo,i.qty,i.layer,formatDateForPDF(i.dateReceived),i.disposalPref,i.status]); }
+            else if(['dispose','return_customer'].includes(currentView)) {
+                // Fixed header: No demand column
+                head=[["No","Qty","Layer","Report","Overdue"]]; 
+                const d=items.filter(i=>i.dateReported && i.disposalStatus!=='Completed' && calculateDaysRemaining(i.dateReported)>=60 && (currentView==='return_customer'?i.disposalPref==='รับคืน':i.disposalPref!=='รับคืน'));
+                body=d.map(i=>[i.receiptNo,i.qty,i.layer,formatDateForPDF(i.dateReported),calculateDaysRemaining(i.dateReported)]);
             }
+            // Add other views...
+
+            doc.autoTable({
+                head: head, body: body, startY: 60,
+                styles: { font: 'Sarabun', fontSize: 10 },
+                didDrawPage: (d) => {
+                     doc.text(`Page ${doc.internal.getNumberOfPages()}`, 195, 10, {align:'right'});
+                     if(settings.footerLeft) doc.text(settings.footerLeft, 14, doc.internal.pageSize.height-10);
+                }
+            });
+            doc.save('report.pdf');
         }
 
-        async function handleSaveItem(e, id) {
-            e.preventDefault();
-            const newItem = {
-                id: id,
-                receiptNo: document.getElementById('m-receipt').value,
-                dateReceived: document.getElementById('m-date').value,
-                qty: document.getElementById('m-qty').value,
-                layer: "'" + document.getElementById('m-layer').value,
-                params: document.getElementById('m-params').value,
-                disposalPref: document.getElementById('m-pref').value
-            };
-            const action = id ? 'editItem' : 'addItem';
-            const res = await apiCall(action, { item: newItem });
-            if (res.status === 'success') {
-                document.getElementById('modal-container').innerHTML = '';
-                await refreshData();
-                router('items');
-            } else {
-                alert(res.message);
-            }
-        }
+        function exportViewXLSX() { const wb=XLSX.utils.book_new(); const ws=XLSX.utils.json_to_sheet(currentView==='history'?events:items); XLSX.utils.book_append_sheet(wb,ws,"Data"); XLSX.writeFile(wb,"export.xlsx"); }
 
-        async function handleDisposeItem(id) {
-            if(!confirm('ยืนยันดำเนินการจำหน่าย/คืนตัวอย่าง?')) return;
-            const res = await apiCall('disposeItem', { id: id });
-            if(res.status === 'success') {
-                alert('เรียบร้อย');
-                await refreshData();
-                router(currentView);
-            } else {
-                alert(res.message);
-            }
-        }
-
-        async function deleteItem(id) {
-            if (!confirm('ยืนยันที่จะลบรายการนี้ถาวร?')) return;
-            const res = await apiCall('deleteItem', { id: id });
-            if (res.status === 'success') {
-                await refreshData();
-                router(currentView);
-            } else {
-                alert(res.message);
-            }
-        }
-
-        async function deleteEvent(id) {
-            if(!confirm('ยืนยันลบประวัติถาวร?')) return;
-            const res = await apiCall('deleteEvent', { id: id });
-            if (res.status === 'success') {
-                await refreshData();
-                router('history');
-            } else {
-                alert(res.message);
-            }
-        }
-
-        async function handleProfileUpdate(e) {
-            e.preventDefault();
-            const pass = document.getElementById('edit-pass').value;
-            const updateData = {
-                username: currentUser.username,
-                name: document.getElementById('edit-name').value,
-                group: document.getElementById('edit-group').value,
-                password: pass ? pass : currentUser.password
-            };
-            const res = await apiCall('updateProfile', updateData);
-            if (res.status === 'success') {
-                currentUser.name = updateData.name;
-                currentUser.group = updateData.group;
-                if (pass) currentUser.password = pass;
-                localStorage.setItem('soilAppUser', JSON.stringify(currentUser));
-                alert('แก้ไขข้อมูลสำเร็จ');
-                updateNavUser();
-            } else {
-                alert(res.message);
-            }
-        }
-        
-        // --- 5. RENDER LOGIC ---
+        // --- 8. RENDER VIEW ---
         function renderSidebar() {
             const nav = document.getElementById('nav-container');
-            const isAdmin = currentUser?.username === 'admin';
-            
-            let html = `
-                <button id="nav-dashboard" onclick="router('dashboard')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 transition-all"><i class="fa-solid fa-chart-pie w-5"></i> แดชบอร์ด</button>
-                <button id="nav-borrow" onclick="router('borrow')" class="nav-item-highlight w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 mb-2"><i class="fa-solid fa-hand-holding w-5"></i> เบิก-คืน ตัวอย่าง</button>
-                <button id="nav-status" onclick="router('status')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3"><i class="fa-solid fa-list-check w-5"></i> สถานะตัวอย่าง</button>
-                <button id="nav-report" onclick="router('report')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 text-blue-300"><i class="fa-solid fa-clipboard-check w-5"></i> รายงานผลวิเคราะห์</button>
-                <button id="nav-dispose" onclick="router('dispose')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 text-orange-300"><i class="fa-solid fa-trash-can-arrow-up w-5"></i> จำหน่ายตัวอย่าง</button>
-                <button id="nav-return_customer" onclick="router('return_customer')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 text-teal-300"><i class="fa-solid fa-rotate-left w-5"></i> คืนตัวอย่าง</button>
-                <button id="nav-items" onclick="router('items')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 text-emerald-300"><i class="fa-solid fa-box-archive w-5"></i> จัดการข้อมูลดิน</button>
+            const adm = currentUser?.username === 'admin';
+            nav.innerHTML = `
+                <button onclick="router('dashboard')" id="nav-dashboard" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</button>
+                <div class="nav-section-title">การเบิก-คืน</div>
+                <button onclick="router('borrow')" id="nav-borrow" class="nav-item"><i class="fa-solid fa-box-open text-emerald-400"></i> เบิกตัวอย่างดิน</button>
+                <button onclick="router('return_items')" id="nav-return_items" class="nav-item"><i class="fa-solid fa-box text-blue-400"></i> คืนตัวอย่างดิน</button>
+                <div class="nav-section-title">ข้อมูล & รายงาน</div>
+                <button onclick="router('status')" id="nav-status" class="nav-item"><i class="fa-solid fa-list-check"></i> สถานะตัวอย่าง</button>
+                <button onclick="router('report')" id="nav-report" class="nav-item"><i class="fa-solid fa-clipboard-check"></i> รายงานผลวิเคราะห์</button>
+                <button onclick="router('dispose')" id="nav-dispose" class="nav-item"><i class="fa-solid fa-trash-can-arrow-up text-orange-400"></i> จำหน่ายตัวอย่าง</button>
+                <button onclick="router('items')" id="nav-items" class="nav-item"><i class="fa-solid fa-database"></i> จัดการข้อมูลดิน</button>
+                ${adm ? `<div class="nav-section-title">ผู้ดูแลระบบ</div><button onclick="router('users')" id="nav-users" class="nav-item"><i class="fa-solid fa-users-gear text-purple-400"></i> จัดการผู้ใช้งาน</button>` : ''}
+                <button onclick="router('history')" id="nav-history" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการทำงาน</button>
             `;
-            if (isAdmin) {
-                html += `<div class="my-2 border-t border-slate-700"></div><button id="nav-users" onclick="router('users')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3 text-purple-300"><i class="fa-solid fa-users-gear w-5"></i> จัดการผู้ใช้งาน</button>`;
-            }
-            html += `<button id="nav-history" onclick="router('history')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left w-5"></i> ประวัติการทำงาน</button>`;
-            nav.innerHTML = html;
         }
 
         async function router(view) {
             currentView = view; currentPage = 1; searchTerm = ''; closeSidebar();
-            const titles = { 'dashboard':'แดชบอร์ด','status':'สถานะตัวอย่าง','items':'จัดการตัวอย่างดิน','borrow':'เบิก-คืน','return_customer':'คืนตัวอย่าง','dispose':'จำหน่ายตัวอย่าง','report':'รายงานผล','history':'ประวัติ','users':'จัดการผู้ใช้','profile':'ข้อมูลส่วนตัว' };
+            const titles = {'dashboard':'Dashboard','borrow':'เบิกตัวอย่างดิน','return_items':'คืนตัวอย่างดิน','status':'สถานะตัวอย่าง','items':'จัดการข้อมูลดิน','dispose':'จำหน่ายตัวอย่าง','report':'รายงานผล','history':'ประวัติ','users':'ผู้ใช้งาน','profile':'ข้อมูลส่วนตัว'};
             document.getElementById('header-title').textContent = titles[view] || 'Soilsheif Pro';
-            
-            document.querySelectorAll('.nav-item, .nav-item-highlight').forEach(e => e.classList.remove('active'));
-            const activeNav = document.getElementById('nav-' + view);
-            if(activeNav) activeNav.classList.add('active');
-
-            if (view === 'dashboard') renderDashboard();
-            else renderContent();
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            const act = document.getElementById('nav-'+view); if(act) act.classList.add('active');
+            if(view === 'dashboard') renderDashboard(); else renderContent();
         }
 
         function renderDashboard() {
             const container = document.getElementById('content-area');
-            let totalQty = 0, borrowedQty = 0, availableQty = 0;
+            let tQ=0, bQ=0, aQ=0;
+            items.forEach(i => { const q=Number(i.qty)||0; tQ+=q; if(i.status==='Borrowed') bQ+=q; else aQ+=q; });
+            const mn = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+            const st = {};
             items.forEach(i => {
-                const q = Number(i.qty) || 0;
-                totalQty += q;
-                if(i.status === 'Borrowed') borrowedQty += q;
-                else availableQty += q;
+                if(i.dateReceived) { const d=new Date(i.dateReceived); if(!isNaN(d)) { const k=`${mn[d.getMonth()]} ${d.getFullYear()+543}`; if(!st[k]) st[k]={smp:0,rep:0,sort:d.getTime()}; st[k].smp+=(Number(i.qty)||0); } }
+                if(i.dateReported) { const d=new Date(i.dateReported); if(!isNaN(d)) { const k=`${mn[d.getMonth()]} ${d.getFullYear()+543}`; if(!st[k]) st[k]={smp:0,rep:0,sort:d.getTime()}; st[k].rep+=(Number(i.qty)||0); } }
             });
-
-            // Monthly Stats Logic
-            const mn = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            const monthlyData = {};
-            
-            items.forEach(i => {
-                if(i.dateReceived) {
-                    const d = new Date(i.dateReceived);
-                    if(!isNaN(d)) {
-                        const k = `${mn[d.getMonth()]} ${d.getFullYear()+543}`;
-                        if(!monthlyData[k]) monthlyData[k] = { smp:0, rec:0, rep:0, sort: d.getTime() };
-                        monthlyData[k].rec++;
-                        monthlyData[k].smp += (Number(i.qty) || 0);
-                    }
-                }
-                if(i.dateReported) {
-                    const d = new Date(i.dateReported);
-                    if(!isNaN(d)) {
-                        const k = `${mn[d.getMonth()]} ${d.getFullYear()+543}`;
-                        if(!monthlyData[k]) monthlyData[k] = { smp:0, rec:0, rep:0, sort: d.getTime() };
-                        monthlyData[k].rep += (Number(i.qty) || 0);
-                    }
-                }
-            });
-            const sortedKeys = Object.keys(monthlyData).sort((a,b) => monthlyData[a].sort - monthlyData[b].sort);
+            const keys = Object.keys(st).sort((a,b)=>st[a].sort-st[b].sort);
 
             container.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500"><div><p class="text-xs font-bold text-slate-400 uppercase">ใบรายการรวม</p><p class="text-3xl font-black text-slate-800">${items.length}</p></div></div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-cyan-500"><div><p class="text-xs font-bold text-slate-400 uppercase">ตัวอย่างดินรวม</p><p class="text-3xl font-black text-slate-800">${totalQty}</p></div></div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500"><div><p class="text-xs font-bold text-slate-400 uppercase">พร้อมเบิก (ตัวอย่าง)</p><p class="text-3xl font-black text-slate-800">${availableQty}</p></div></div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-orange-500"><div><p class="text-xs font-bold text-slate-400 uppercase">ถูกเบิก (ตัวอย่าง)</p><p class="text-3xl font-black text-slate-800">${borrowedQty}</p></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 fade-in">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><div><p class="text-xs font-bold text-slate-400 uppercase">ใบรายการรวม</p><p class="text-4xl font-black text-slate-800">${items.length}</p></div></div>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><div><p class="text-xs font-bold text-slate-400 uppercase">ตัวอย่างดิน (Qty)</p><p class="text-4xl font-black text-slate-800">${tQ}</p></div></div>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><div><p class="text-xs font-bold text-slate-400 uppercase">พร้อมเบิก (Qty)</p><p class="text-4xl font-black text-emerald-600">${aQ}</p></div></div>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><div><p class="text-xs font-bold text-slate-400 uppercase">ถูกเบิกวิเคราะห์ (Qty)</p><p class="text-4xl font-black text-orange-500">${bQ}</p></div></div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm h-96">
-                        <h3 class="font-bold text-slate-700 mb-4">สถานะตัวอย่าง (ผลรวมจำนวนดิน)</h3>
-                        <div class="h-72"><canvas id="statusChart"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm h-96">
-                        <h3 class="font-bold text-slate-700 mb-4">สถิติการรับตัวอย่างรายเดือน</h3>
-                        <div class="h-72"><canvas id="recChart"></canvas></div>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 fade-in">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm h-[400px]"><h3 class="font-bold mb-6">สถานะ (Qty)</h3><div class="h-64"><canvas id="statusChart"></canvas></div></div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm h-[400px]"><h3 class="font-bold mb-6">รับเข้า</h3><div class="h-64"><canvas id="recChart"></canvas></div></div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="font-bold text-slate-700 mb-4">สถิติการรายงานผลรายเดือน</h3><div class="h-72"><canvas id="repChart"></canvas></div></div>
             `;
-
             setTimeout(() => {
                 Chart.register(ChartDataLabels);
                 if(statusChartInst) statusChartInst.destroy();
                 statusChartInst = new Chart(document.getElementById('statusChart').getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels:['พร้อมเบิก','ถูกเบิก'], datasets:[{data:[availableQty, borrowedQty], backgroundColor:['#10b981','#f97316'], borderWidth:0}]},
-                    options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{ datalabels:{color:'#fff', font:{weight:'bold', size:14}}}}
+                    type: 'doughnut', data: { labels:['พร้อมเบิก','ถูกเบิก'], datasets:[{data:[aQ, bQ], backgroundColor:['#10b981','#f97316']}] },
+                    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'bottom'}, datalabels:{color:'#fff'} } }
                 });
-
-                const barOpts = {
-                    responsive: true, maintainAspectRatio: false,
-                    layout: { padding: { top: 35 } },
-                    scales: { y: { beginAtZero: true, grace: '20%' } },
-                    plugins: { legend:{display:false}, datalabels:{anchor:'end', align:'top', color:'#475569', font:{weight:'bold'}, offset:4} }
-                };
-
+                const barOpts = { responsive:true, maintainAspectRatio:false, layout:{padding:{top:30}}, scales:{y:{beginAtZero:true, grace:'10%'}}, plugins:{legend:{display:false}, datalabels:{anchor:'end', align:'top', offset:4}} };
                 if(rsChartInst) rsChartInst.destroy();
-                rsChartInst = new Chart(document.getElementById('recChart').getContext('2d'), {
-                    type:'bar', data:{labels:sortedKeys, datasets:[{label:'ตัวอย่าง', data:sortedKeys.map(k=>monthlyData[k].smp), backgroundColor:'#0ea5e9', borderRadius:6}]},
-                    options: barOpts
-                });
-
-                if(repChartInst) repChartInst.destroy();
-                repChartInst = new Chart(document.getElementById('repChart').getContext('2d'), {
-                    type:'bar', data:{labels:sortedKeys, datasets:[{label:'ตัวอย่าง', data:sortedKeys.map(k=>monthlyData[k].rep), backgroundColor:'#10b981', borderRadius:6}]},
-                    options: barOpts
-                });
-            }, 150);
+                rsChartInst = new Chart(document.getElementById('recChart').getContext('2d'), { type:'bar', data:{labels:keys, datasets:[{label:'Qty', data:keys.map(k=>st[k].smp), backgroundColor:'#3b82f6', borderRadius:8}]}, options:barOpts });
+            }, 100);
         }
 
         function renderContent() {
             const container = document.getElementById('content-area');
             const isAdmin = currentUser.username === 'admin';
-            const canAct = isAdmin || (currentView === 'items' && currentUser.canManage) || (currentView === 'report' && currentUser.canReport) || (['dispose','return_customer'].includes(currentView) && currentUser.canDispose);
-            const pg = `<select onchange="updateRowsPerPage(this.value)" class="p-2 border rounded-lg text-xs ml-2 bg-white outline-none"><option value="20" ${rowsPerPage==20?'selected':''}>20 แถว</option><option value="50" ${rowsPerPage==50?'selected':''}>50 แถว</option><option value="100" ${rowsPerPage==100?'selected':''}>100 แถว</option><option value="10000" ${rowsPerPage==10000?'selected':''}>ทั้งหมด</option></select>`;
+            const canAct = isAdmin || (['items','report','dispose'].includes(currentView));
+            const pg = `<select onchange="updateRowsPerPage(this.value)" class="p-2 border rounded-lg text-xs ml-2 bg-white outline-none"><option value="20">20</option><option value="50">50</option><option value="10000">All</option></select>`;
 
             let toolbar = `
-                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <div class="flex items-center w-full md:w-auto bg-white p-1 rounded-xl shadow-sm border">
-                        <i class="fa-solid fa-magnifying-glass ml-3 text-slate-400"></i>
-                        <input type="text" oninput="handleSearch(this.value)" value="${searchTerm}" placeholder="ค้นหาข้อมูล..." class="p-2 bg-transparent outline-none text-sm w-full md:w-64">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 fade-in">
+                    <div class="flex items-center w-full md:w-auto bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+                        <i class="fa-solid fa-magnifying-glass ml-4 text-slate-400"></i>
+                        <input type="text" oninput="handleSearch(this.value)" value="${searchTerm}" placeholder="ค้นหาข้อมูล..." class="p-2.5 bg-transparent outline-none text-sm w-full md:w-64 font-medium text-slate-700">
+                        <div class="h-6 w-px bg-slate-200 mx-2"></div>
                         ${pg}
                     </div>
-                    <div class="flex gap-2 items-center">
-                        <div class="flex bg-white rounded-xl shadow-sm border p-1 items-center">
-                            <button onclick="exportViewXLSX()" class="px-3 py-1.5 text-slate-500 hover:text-emerald-600 rounded-lg transition-colors" title="Excel"><i class="fa-solid fa-file-excel text-lg"></i></button>
-                            <div class="w-px h-6 bg-slate-200 mx-1"></div>
-                            <button onclick="exportViewPDF()" class="px-3 py-1.5 text-slate-500 hover:text-red-600 rounded-lg transition-colors" title="PDF"><i class="fa-solid fa-file-pdf text-lg"></i></button>
-                            ${(isAdmin && ['items','report','dispose','return_customer','history','users','status'].includes(currentView)) ? `<button onclick="openSettingsModal('${currentView}')" class="ml-2 btn-secondary text-xs px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-cog"></i></button>` : ''}
-                        </div>
-                        ${(currentView==='items' && isAdmin) ? `<button onclick="openItemModal()" class="btn-primary flex items-center gap-2"><i class="fa-solid fa-plus"></i> เพิ่มข้อมูล</button>
-                        <button onclick="deleteSelected('item')" id="btn-delete-items" class="btn-danger hidden flex items-center gap-2 animate-pulse"><i class="fa-solid fa-trash-can"></i> ลบที่เลือก</button>` : ''}
-                        ${(isAdmin && ['history','dispose','return_customer'].includes(currentView)) ? `<button onclick="deleteSelected('event')" id="btn-delete-${currentView==='return_customer'?'return':currentView}" class="btn-danger hidden flex items-center gap-2 animate-pulse"><i class="fa-solid fa-trash-can"></i> ลบที่เลือก</button>` : ''}
+                    <div class="flex gap-3 items-center flex-wrap justify-end">
+                        ${(currentView!=='borrow' && currentView!=='return_items') ? `<button onclick="exportViewPDF()" class="btn-secondary">PDF</button><button onclick="exportViewXLSX()" class="btn-secondary">Excel</button>` : ''}
+                        
+                        ${(currentView==='items' && isAdmin) ? `<button onclick="syncExternalData()" class="btn-sync"><i class="fa-solid fa-rotate"></i> Sync</button><button onclick="openItemModal()" class="btn-primary"><i class="fa-solid fa-plus"></i> เพิ่ม</button><button onclick="deleteSelected('item')" id="btn-delete-items" class="btn-danger hidden"><i class="fa-solid fa-trash-can"></i> ลบ</button>` : ''}
+                        
+                        ${(isAdmin && ['history','dispose'].includes(currentView)) ? `<button onclick="deleteSelected('event')" id="btn-delete-${currentView}" class="btn-danger hidden">ลบ</button>` : ''}
+                        ${(isAdmin && currentView === 'return_customer') ? `<button onclick="deleteSelected('item')" id="btn-delete-return" class="btn-danger hidden">ลบ</button>` : ''}
+                        ${(isAdmin && ['items','report','dispose','return_customer','history','users','status'].includes(currentView)) ? `<button onclick="openSettingsModal('${currentView}')" class="ml-2 btn-secondary px-3"><i class="fa-solid fa-cog"></i></button>` : ''}
                     </div>
                 </div>`;
 
             if(currentView === 'borrow') {
-                container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full"><div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col"><h3 class="text-lg font-bold mb-4 text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-search"></i> เบิกตัวอย่าง</h3><input type="text" oninput="handleSearch(this.value)" placeholder="พิมพ์เลขรับ หรือ ชั้นเก็บ..." class="w-full p-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-emerald-500"><div class="flex-1 overflow-y-auto"><table class="w-full text-left text-sm"><thead><tr class="border-b"><th class="pb-2">เลขรับ</th><th class="pb-2">Qty</th><th class="pb-2">ชั้น</th><th class="pb-2 text-right">เลือก</th></tr></thead><tbody id="borrow-list-body"></tbody></table></div></div><div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col h-fit"><h3 class="text-lg font-bold mb-4 text-blue-700 flex items-center gap-2"><i class="fa-solid fa-hand-holding"></i> คืนตัวอย่าง</h3><div class="overflow-y-auto max-h-[500px]"><table class="w-full text-left text-sm"><thead><tr class="border-b"><th class="pb-2">เลขรับ</th><th class="pb-2">Qty</th><th class="pb-2 text-right">คืน</th></tr></thead><tbody id="return-list-body"></tbody></table></div></div></div>`;
-                updateTableData();
-                return;
-            } else if(currentView === 'profile') {
-                container.innerHTML = `<div class="bg-white max-w-2xl mx-auto p-8 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-xl font-bold mb-6 text-slate-800">ข้อมูลส่วนตัว</h3><form onsubmit="handleProfileUpdate(event)" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Username</label><input type="text" value="${currentUser.username}" disabled class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl"></div><div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">กลุ่มงาน</label><select id="edit-group" class="w-full p-3 border rounded-xl outline-none">${DEPARTMENTS.map(g=>`<option value="${g}" ${currentUser.group===g?'selected':''}>${g}</option>`).join('')}</select></div></div><div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">ชื่อ-นามสกุล</label><input type="text" id="edit-name" value="${currentUser.name}" class="w-full p-3 border rounded-xl outline-none"></div><div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">รหัสผ่านใหม่</label><input type="password" id="edit-pass" class="w-full p-3 border rounded-xl outline-none"></div><button type="submit" class="btn-primary w-full py-4 text-lg">บันทึก</button></form></div>`;
-                return;
+                container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full fade-in"><div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col"><h3 class="text-xl font-bold mb-6 text-emerald-700">เบิกตัวอย่าง</h3><input type="text" oninput="handleSearch(this.value)" placeholder="สแกน..." class="w-full p-4 border-2 rounded-2xl mb-6 outline-none focus:border-emerald-500"><div class="flex-1 overflow-y-auto custom-scroll pr-2"><table class="w-full text-left text-sm"><thead><tr><th class="pb-3">เลขรับ</th><th class="pb-3">Qty</th><th class="pb-3">ชั้น</th><th class="pb-3 text-right">เลือก</th></tr></thead><tbody id="borrow-list"></tbody></table></div></div><div class="bg-white p-8 rounded-3xl shadow-sm flex flex-col"><h3 class="text-xl font-bold mb-6 text-blue-700">คืนตัวอย่าง</h3><div class="flex-1 overflow-y-auto"><table class="w-full text-left text-sm"><thead><tr><th class="pb-3">เลขรับ</th><th class="pb-3">Qty</th><th class="pb-3 text-right">คืน</th></tr></thead><tbody id="return-list"></tbody></table></div></div></div>`;
+                updateTableData(); return;
+            }
+            if(currentView === 'return_items') {
+                container.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-sm flex flex-col h-full max-w-4xl mx-auto fade-in"><h3 class="text-xl font-bold mb-6 text-blue-700">รายการคืน</h3><div class="flex-1 overflow-y-auto"><table class="w-full text-left text-sm"><thead><tr><th class="pb-3 pl-4">เลขรับ</th><th class="pb-3">Qty</th><th class="pb-3 text-right pr-4">คืน</th></tr></thead><tbody id="return-list-only"></tbody></table></div></div>`;
+                updateTableData(); return;
             }
 
             let th = '';
-            if(currentView==='status') th = `<tr><th class="p-4">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">สถานะ</th><th class="p-4">ผู้เบิก</th><th class="p-4">พารามิเตอร์</th><th class="p-4">วันที่รายงาน</th></tr>`;
-            else if(currentView==='items') th = `<tr><th class="p-4 w-10"><input type="checkbox" onchange="toggleAllItems(this,'btn-delete-items')"></th><th class="p-4">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">วันที่รับ</th><th class="p-4">จำหน่ายโดย</th><th class="p-4 text-center">จัดการ</th></tr>`;
-            else if(currentView==='report') th = `<tr><th class="p-4">เลขรับ</th><th class="p-4">วันที่รับ</th><th class="p-4">พารามิเตอร์</th><th class="p-4 text-center">จัดการ</th></tr>`;
-            else if(currentView==='history') th = `<tr><th class="p-4 w-10">${isAdmin?`<input type="checkbox" onchange="toggleAllItems(this,'btn-delete-history')">`:''}</th><th class="p-4">เวลา</th><th class="p-4">รายการ</th><th class="p-4">เลขรับ</th><th class="p-4">ผู้ทำ</th><th class="p-4">ชื่อ</th><th class="p-4">หมายเหตุ</th><th class="p-4 text-center">จัดการ</th></tr>`;
+            if(currentView==='items') th = `<tr><th class="p-4 w-10 rounded-tl-xl"><input type="checkbox" onchange="toggleAllItems(this,'btn-delete-items')" class="item-checkbox"></th><th class="p-4">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">วันที่รับ</th><th class="p-4 text-center rounded-tr-xl">จัดการ</th></tr>`;
             else if(['dispose','return_customer'].includes(currentView)) {
                 let delId = currentView==='return_customer'?'btn-delete-return':'btn-delete-dispose';
-                th = `<tr><th class="p-4 w-10">${canAct?`<input type="checkbox" onchange="toggleAllItems(this,'${delId}')">`:''}</th><th class="p-4">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">วันที่รายงาน</th><th class="p-4">เกินกำหนด</th><th class="p-4 text-center">จัดการ</th></tr>`;
-            } else if(currentView==='users') th = `<tr><th class="p-4">Username</th><th class="p-4">ชื่อ</th><th class="p-4">กลุ่ม</th><th class="p-4">สถานะ</th><th class="p-4 text-center">รายงาน</th><th class="p-4 text-center">จัดการ</th><th class="p-4 text-center">จำหน่าย</th><th class="p-4 text-center">Action</th></tr>`;
-
-            container.innerHTML = toolbar + `<div class="bg-white rounded-xl shadow-sm overflow-hidden"><div class="table-responsive"><table class="w-full text-left text-sm border-collapse"><thead class="bg-slate-50 text-slate-500 font-bold border-b uppercase text-[11px] tracking-wider">${th}</thead><tbody id="data-body" class="divide-y divide-slate-100"></tbody></table></div></div><div id="pagination-controls"></div>`;
+                th = `<tr><th class="p-4 w-10 rounded-tl-xl">${canAct?`<input type="checkbox" onchange="toggleAllItems(this,'${delId}')" class="item-checkbox">`:''}</th><th class="p-4">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">วันที่รายงาน</th><th class="p-4">เกินกำหนด</th><th class="p-4 text-center rounded-tr-xl">จัดการ</th></tr>`;
+            }
+            else if(currentView==='status') th = `<tr><th class="p-4 rounded-tl-xl">เลขรับ</th><th class="p-4">Qty</th><th class="p-4">ชั้น</th><th class="p-4">สถานะ</th><th class="p-4">ผู้เบิก</th><th class="p-4 rounded-tr-xl">วันที่รายงาน</th></tr>`;
+            else if(currentView==='report') th = `<tr><th class="p-4 rounded-tl-xl">เลขรับ</th><th class="p-4">วันที่รับ</th><th class="p-4">พารามิเตอร์</th><th class="p-4 text-center rounded-tr-xl">จัดการ</th></tr>`;
+            else if(currentView==='history') th = `<tr><th class="p-4 w-10 rounded-tl-xl">${isAdmin?`<input type="checkbox" onchange="toggleAllItems(this,'btn-delete-history')" class="item-checkbox">`:''}</th><th class="p-4">เวลา</th><th class="p-4">รายการ</th><th class="p-4">เลขรับ</th><th class="p-4">ผู้ทำ</th><th class="p-4">ชื่อ</th><th class="p-4">หมายเหตุ</th><th class="p-4 text-center rounded-tr-xl">จัดการ</th></tr>`;
+            else if(currentView==='users') th = `<tr><th class="p-4 rounded-tl-xl">User</th><th class="p-4">Name</th><th class="p-4">Status</th><th class="p-4 text-center rounded-tr-xl">Action</th></tr>`;
+            
+            container.innerHTML = toolbar + `<div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-slate-100 font-bold border-b">${th}</thead><tbody id="data-body" class="divide-y"></tbody></table></div><div id="pagination-controls" class="mt-4"></div>`;
             updateTableData();
-        }
-
-        function renderPagination(total, funcName) { 
-            const pages = Math.ceil(total / rowsPerPage); 
-            if (pages <= 1) return ''; 
-            return `<div class="flex justify-center items-center gap-2 mt-4 p-4"><button onclick="${funcName}(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''} class="px-3 py-1 bg-white border rounded hover:bg-gray-50"><i class="fa-solid fa-chevron-left"></i></button><span class="text-sm text-gray-600">หน้า ${currentPage} จาก ${pages}</span><button onclick="${funcName}(${currentPage + 1})" ${currentPage === pages ? 'disabled class="opacity-50 cursor-not-allowed"' : ''} class="px-3 py-1 bg-white border rounded hover:bg-gray-50"><i class="fa-solid fa-chevron-right"></i></button></div>`; 
         }
 
         function updateTableData() {
             const tbody = document.getElementById('data-body');
-            const bBody = document.getElementById('borrow-list-body');
-            const rBody = document.getElementById('return-list-body');
+            const bBody = document.getElementById('borrow-list');
+            const rBody = document.getElementById('return-list');
+            const rBodyOnly = document.getElementById('return-list-only');
             
             if(currentView === 'borrow') {
-                const av = items.filter(i => i.status === 'Available');
-                const br = items.filter(i => i.status === 'Borrowed' && i.holder === currentUser.username);
                 const s = searchTerm.toLowerCase();
-                const fAv = av.filter(i => !s || i.receiptNo.toLowerCase().includes(s));
-                
-                if(bBody) bBody.innerHTML = fAv.length === 0 ? '<tr><td colspan="4" class="p-4 text-center text-slate-400">ไม่พบตัวอย่าง</td></tr>' : fAv.map(i => `<tr><td class="py-3 font-bold">${i.receiptNo}</td><td>${i.qty}</td><td class="text-slate-500">${i.layer}</td><td class="text-right"><button onclick="processTransaction('borrow','${i.id}')" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all">เบิก</button></td></tr>`).join('');
-                if(rBody) rBody.innerHTML = br.length === 0 ? '<tr><td colspan="3" class="p-4 text-center text-slate-400">ไม่มีรายการ</td></tr>' : br.map(i => `<tr><td class="py-3 font-bold">${i.receiptNo}</td><td>${i.qty}</td><td class="text-right"><button onclick="processTransaction('return','${i.id}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">คืน</button></td></tr>`).join('');
+                const av = items.filter(i => i.status === 'Available' && (!s || i.receiptNo.toLowerCase().includes(s)));
+                const br = items.filter(i => i.status === 'Borrowed' && i.holder === currentUser.username);
+                if(bBody) bBody.innerHTML = av.map(i => `<tr><td class="py-3 font-bold">${i.receiptNo}</td><td>${i.qty}</td><td>${i.layer}</td><td class="text-right"><button onclick="processTransaction('borrow','${i.id}')" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg font-bold">เบิก</button></td></tr>`).join('');
+                if(rBody) rBody.innerHTML = br.map(i => `<tr><td class="py-3 font-bold">${i.receiptNo}</td><td>${i.qty}</td><td class="text-right"><button onclick="processTransaction('return','${i.id}')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-bold">คืน</button></td></tr>`).join('');
                 return;
+            }
+            if(currentView === 'return_items') {
+                 const br = items.filter(i => i.status === 'Borrowed' && i.holder === currentUser.username);
+                 if(rBodyOnly) rBodyOnly.innerHTML = br.length===0 ? '<tr><td colspan="3" class="p-8 text-center text-slate-400">ไม่มีรายการ</td></tr>' : br.map(i => `<tr class="border-b"><td class="py-4 pl-4 font-bold">${i.receiptNo}</td><td>${i.qty}</td><td class="text-right pr-4"><button onclick="processTransaction('return','${i.id}')" class="btn-primary py-1.5 px-4 text-xs">คืนตัวอย่าง</button></td></tr>`).join('');
+                 return;
             }
 
             if(!tbody) return;
             let filtered = items;
             if(currentView==='report') filtered = items.filter(i=>!i.dateReported);
-            else if(['dispose','return_customer'].includes(currentView)) filtered = items.filter(i => i.dateReported && i.disposalStatus!=='Completed' && calculateDaysRemaining(i.dateReported)>=60 && (currentView==='return_customer' ? i.disposalPref==='รับคืน' : i.disposalPref!=='รับคืน'));
+            else if(['dispose','return_customer'].includes(currentView)) filtered = items.filter(i => i.dateReported && i.disposalStatus!=='Completed' && calculateDaysRemaining(i.dateReported)>=60 && (currentView==='return_customer'?i.disposalPref==='รับคืน':i.disposalPref!=='รับคืน'));
             else if(currentView==='history') filtered = events;
             else if(currentView==='users') filtered = userList;
 
@@ -748,142 +496,25 @@
                  if(currentView==='users') return !s || row.username.toLowerCase().includes(s);
                  if(currentView==='history') return !s || row.itemName.toLowerCase().includes(s);
                  return !s || row.receiptNo.toLowerCase().includes(s);
-            }).slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+            }).slice((currentPage-1)*rowsPerPage, currentPage*rowsPerPage);
 
             tbody.innerHTML = paged.map(row => {
-                if(currentView==='status') return `<tr><td class="p-4 font-bold text-slate-700">${row.receiptNo}</td><td>${row.qty}</td><td>${row.layer}</td><td><span class="px-2 py-1 rounded-lg text-xs font-black uppercase ${row.status==='Available'?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}">${row.status}</span></td><td>${row.holder}</td><td class="text-xs text-slate-400">${row.params}</td><td class="text-xs text-blue-600">${formatDateTh(row.dateReported)}</td></tr>`;
-                
-                if(currentView==='items') return `<tr><td class="p-4"><input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('btn-delete-items')"></td><td class="p-4 font-bold text-slate-700">${row.receiptNo}</td><td>${row.qty}</td><td class="p-4 text-slate-500">${row.layer}</td><td>${formatDateTh(row.dateReceived)}</td><td class="text-xs">${row.disposalPref}</td><td class="p-4 text-center space-x-2"><button onclick='openItemModal(${JSON.stringify(row).replace(/'/g,"&apos;")})' class="text-blue-500 hover:scale-110 transition-transform"><i class="fa-solid fa-edit"></i></button><button onclick="deleteItem('${row.id}')" class="text-red-500 hover:scale-110 transition-transform"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                
-                if(currentView==='report') return `<tr><td class="p-4 font-bold text-slate-700">${row.receiptNo}</td><td>${formatDateTh(row.dateReceived)}</td><td class="text-xs text-slate-500">${row.params}</td><td class="text-center"><button onclick="openReportDateModal('${row.id}','${row.receiptNo}')" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:bg-blue-700">ยืนยันผล</button></td></tr>`;
-                
+                const tr = "hover:bg-slate-50 transition-colors border-b last:border-0";
+                if(currentView==='items') return `<tr class="${tr}"><td class="p-4"><input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('btn-delete-items')"></td><td class="p-4 font-bold">${row.receiptNo}</td><td>${row.qty}</td><td>${row.layer}</td><td>${formatDateTh(row.dateReceived)}</td><td class="text-xs">${row.disposalPref}</td><td class="p-4 text-center"><button onclick='openItemModal("${row.id}")' class="text-blue-500"><i class="fa-solid fa-edit"></i></button></td></tr>`;
                 if(['dispose','return_customer'].includes(currentView)) {
                     const chkId = currentView==='return_customer' ? 'btn-delete-return' : 'btn-delete-dispose';
-                    return `<tr><td class="p-4"><input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('${chkId}')"></td><td class="p-4 font-bold text-slate-700">${row.receiptNo}</td><td>${row.qty}</td><td class="p-4 text-slate-500">${row.layer}</td><td>${formatDateTh(row.dateReported)}</td><td class="p-4 text-red-600 font-bold">${calculateDaysRemaining(row.dateReported)} วัน</td><td class="text-center"><button onclick="handleDisposeItem('${row.id}')" class="bg-orange-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:bg-orange-700">ดำเนินการ</button></td></tr>`;
+                    return `<tr class="${tr}"><td class="p-4"><input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('${chkId}')"></td><td class="p-4 font-bold">${row.receiptNo}</td><td>${row.qty}</td><td>${row.layer}</td><td>${formatDateTh(row.dateReported)}</td><td class="text-red-600 font-bold">${calculateDaysRemaining(row.dateReported)} วัน</td><td class="text-center"><button onclick="handleDisposeItem('${row.id}')" class="bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">ดำเนินการ</button></td></tr>`;
                 }
-
-                if(currentView==='history') return `<tr><td class="p-4">${currentUser.username==='admin'?`<input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('btn-delete-history')">`:''}</td><td class="whitespace-nowrap text-xs">${formatDateTh(row.date)}</td><td><span class="px-2 py-1 rounded text-[10px] font-bold ${row.type==='Borrow'?'bg-orange-100 text-orange-600':'bg-emerald-100 text-emerald-600'}">${row.type}</span></td><td class="font-mono font-bold">${row.itemName}</td><td class="font-bold">${row.user}</td><td class="text-xs text-slate-400">${getUserInfo(row.user).name}</td><td class="text-xs text-slate-400">${getUserInfo(row.user).group}</td><td class="text-xs">${row.note||'-'}</td><td class="text-center">${currentUser.username==='admin'?`<button onclick="deleteEvent('${row.id}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`;
-                
-                if(currentView==='users') return `<tr><td class="p-4 font-bold">${row.username}</td><td>${row.name}</td><td>${row.group}</td><td><span class="px-2 py-1 rounded-full text-xs font-bold ${row.status==='Approved'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700'}">${row.status}</span></td><td class="text-center"><input type="checkbox" ${row.canReport?'checked':''} onchange="toggleUserPermission('${row.username}','report',this.checked)"></td><td class="text-center"><input type="checkbox" ${row.canManage?'checked':''} onchange="toggleUserPermission('${row.username}','manage',this.checked)"></td><td class="text-center"><input type="checkbox" ${row.canDispose?'checked':''} onchange="toggleUserPermission('${row.username}','dispose',this.checked)"></td><td class="text-center space-x-2">${row.status==='Pending'?`<button onclick="approveUser('${row.username}')" class="text-emerald-500"><i class="fa-solid fa-check"></i></button>`:''}<button onclick="deleteUser('${row.username}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                
+                if(currentView==='status') return `<tr class="${tr}"><td class="p-4 font-bold">${row.receiptNo}</td><td>${row.qty}</td><td>${row.layer}</td><td>${row.status}</td><td>${row.holder}</td><td>${formatDateTh(row.dateReported)}</td></tr>`;
+                if(currentView==='report') return `<tr class="${tr}"><td class="p-4 font-bold">${row.receiptNo}</td><td>${formatDateTh(row.dateReceived)}</td><td>${row.params}</td><td class="text-center"><button onclick="openReportDateModal('${row.id}','${row.receiptNo}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">ยืนยัน</button></td></tr>`;
+                if(currentView==='history') return `<tr class="${tr}"><td class="p-4">${currentUser.username==='admin'?`<input type="checkbox" class="item-checkbox" value="${row.id}" onchange="checkSelection('btn-delete-history')">`:''}</td><td>${formatDateTh(row.date)}</td><td>${row.type}</td><td class="font-bold">${row.itemName}</td><td>${row.user}</td><td>${row.note||'-'}</td><td class="text-center"><button onclick="deleteEvent('${row.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                if(currentView==='users') return `<tr class="${tr}"><td class="p-4 font-bold">${row.username}</td><td>${row.name}</td><td>${row.status}</td><td class="text-center"><button onclick="deleteUser('${row.username}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 return '';
             }).join('');
-            
+
             const pCont = document.getElementById('pagination-controls');
             if(pCont) pCont.innerHTML = renderPagination(filtered.length, 'changePage');
         }
-
-        // --- 6. EXPORT FUNCTIONS ---
-        async function exportViewPDF() {
-            if (!window.jspdf) return alert('PDF Library Not Ready');
-            const { jsPDF } = window.jspdf;
-            const isLandscape = currentView === 'history';
-            const doc = new jsPDF(isLandscape ? 'l' : 'p'); 
-            const settings = docSettings[currentView] || { footerLeft: '', footerRight: '' };
-            await loadThaiFont(doc);
-
-            const titles = { 
-                'items':'Soil Samples List', 
-                'status':'Sample Status Report', 
-                'report':'Pending Analysis Report', 
-                'dispose':'Disposal List', 
-                'return_customer':'Return List', 
-                'history':'History Log', 
-                'users':'User Management' 
-            };
-            
-            doc.setFontSize(22);
-            doc.text(titles[currentView] || 'Report', 14, 25);
-            doc.setFontSize(10);
-            doc.text(`Date: ${formatDateForPDF(new Date().toISOString())} | By: ${currentUser.name}`, 14, 35);
-            doc.line(14, 40, isLandscape ? 283 : 196, 40);
-
-            let headers = [], data = [];
-            if(currentView === 'items') {
-                headers = [["Receipt No", "Qty", "Layer", "Date Received", "Disposal", "Status"]];
-                data = items.map(i => [i.receiptNo, i.qty, i.layer, formatDateForPDF(i.dateReceived), i.disposalPref, i.status]);
-            } else if(currentView === 'status') {
-                headers = [["Receipt No", "Qty", "Layer", "Status", "Holder", "Params", "Report Date"]];
-                data = items.map(i => [i.receiptNo, i.qty, i.layer, i.status, i.holder, i.params, formatDateForPDF(i.dateReported)]);
-            } else if(currentView === 'report') {
-                headers = [["Receipt No", "Date Received", "Params"]];
-                data = items.filter(i=>!i.dateReported).map(i => [i.receiptNo, formatDateForPDF(i.dateReceived), i.params]);
-            } else if(currentView === 'history') {
-                headers = [["Time", "Action", "Receipt No", "User", "Note"]];
-                data = events.map(e => [formatDateTh(e.date), e.type, e.itemName, e.user, e.note]);
-            } else if(currentView === 'dispose' || currentView === 'return_customer') {
-                headers = [["Receipt No", "Qty", "Layer", "Report Date", "Overdue (Days)"]];
-                const filtered = items.filter(i => i.dateReported && i.disposalStatus !== 'Completed' && calculateDaysRemaining(i.dateReported) >= 60 && (currentView === 'return_customer' ? i.disposalPref === 'รับคืน' : i.disposalPref !== 'รับคืน'));
-                data = filtered.map(i => [i.receiptNo, i.qty, i.layer, formatDateForPDF(i.dateReported), calculateDaysRemaining(i.dateReported)]);
-            } else if(currentView === 'users') {
-                headers = [["Username", "Name", "Group", "Status"]];
-                data = userList.map(u => [u.username, u.name, u.group, u.status]);
-            }
-
-            doc.autoTable({
-                head: headers,
-                body: data,
-                startY: 45, // Adjusted startY
-                styles: { font: 'Sarabun', fontSize: 10 },
-                headStyles: { fillColor: [5, 150, 105] },
-                didDrawPage: (d) => {
-                    doc.setFontSize(9);
-                    const pageHeight = doc.internal.pageSize.height;
-                    const pageWidth = doc.internal.pageSize.width;
-                    if(settings.footerLeft) doc.text(settings.footerLeft, 14, pageHeight - 10);
-                    if(settings.footerRight) doc.text(settings.footerRight, pageWidth - 14, pageHeight - 10, { align: 'right' });
-                    doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth - 14, pageHeight - 10, { align: 'right' });
-                }
-            });
-
-            doc.save(`${currentView}_report.pdf`);
-            hideLoading();
-        }
-
-        // --- 9. UTILS ---
-        function openItemModal(item = null) {
-            const isEdit = !!item;
-            const html = `<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4">${isEdit ? 'แก้ไข' : 'เพิ่ม'}ตัวอย่าง</h3><form onsubmit="handleSaveItem(event, '${isEdit ? item.id : ''}')" class="space-y-3"><div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-bold">เลขรับ</label><input type="text" id="m-receipt" value="${item?.receiptNo||''}" class="w-full border p-2 rounded" required></div><div><label class="text-xs font-bold">วันที่รับ</label><input type="date" id="m-date" value="${item?.dateReceived ? item.dateReceived.split('T')[0] : ''}" class="w-full border p-2 rounded" required></div></div><div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-bold">จำนวน</label><input type="number" id="m-qty" value="${item?.qty||1}" class="w-full border p-2 rounded" required></div><div><label class="text-xs font-bold">ชั้น</label><input type="text" id="m-layer" value="${item?.layer?.replace(/'/g,'')||''}" class="w-full border p-2 rounded"></div></div><div><label class="text-xs font-bold">พารามิเตอร์</label><input type="text" id="m-params" value="${item?.params||''}" class="w-full border p-2 rounded"></div><div><label class="text-xs font-bold">ความต้องการ</label><select id="m-pref" class="w-full border p-2 rounded"><option value="ทิ้ง" ${item?.disposalPref==='ทิ้ง'?'selected':''}>ทิ้ง</option><option value="รับคืน" ${item?.disposalPref==='รับคืน'?'selected':''}>รับคืน</option></select></div><div class="flex justify-end gap-2 mt-4 border-t pt-4"><button type="button" onclick="document.getElementById('modal-container').innerHTML=''" class="px-4 py-2 text-gray-500">ยกเลิก</button><button type="submit" class="btn-primary">บันทึก</button></div></form></div></div>`;
-            document.getElementById('modal-container').innerHTML = html;
-        }
-
-        async function handleSaveItem(e, id) {
-            e.preventDefault();
-            const payload = {
-                id: id,
-                receiptNo: document.getElementById('m-receipt').value,
-                dateReceived: document.getElementById('m-date').value,
-                qty: document.getElementById('m-qty').value,
-                layer: "'" + document.getElementById('m-layer').value,
-                params: document.getElementById('m-params').value,
-                disposalPref: document.getElementById('m-pref').value
-            };
-            const action = id ? 'editItem' : 'addItem';
-            const res = await apiCall(action, { item: payload });
-            if(res.status==='success') { document.getElementById('modal-container').innerHTML=''; await refreshData(); router('items'); } else alert(res.message);
-        }
-
-        async function openSettingsModal(k) { document.getElementById('modal-container').innerHTML=`<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="text-xl font-bold mb-4">ตั้งค่า PDF (${k})</h3><input type="text" id="set-l" class="w-full border p-2 rounded mb-2" placeholder="ซ้าย"><input type="text" id="set-r" class="w-full border p-2 rounded mb-4" placeholder="ขวา"><div class="flex justify-end gap-2"><button onclick="document.getElementById('modal-container').innerHTML=''" class="px-4 py-2 text-gray-500">ยกเลิก</button><button onclick="saveSettings('${k}')" class="btn-primary">บันทึก</button></div></div></div>`; }
-        async function saveSettings(k) { docSettings[k]={footerLeft:document.getElementById('set-l').value, footerRight:document.getElementById('set-r').value}; const res=await apiCall('saveSettings',{type:k, settings:docSettings[k]}, false); if(res.status==='success') document.getElementById('modal-container').innerHTML=''; }
-
-        function checkSelection(btnId) {
-            const c = document.querySelectorAll('.item-checkbox:checked').length;
-            const btn = document.getElementById(btnId);
-            if(btn) {
-                if(c > 0) { btn.classList.remove('hidden'); btn.querySelector('span') ? btn.querySelector('span').textContent = c : null; }
-                else btn.classList.add('hidden');
-            }
-        }
-        function toggleAllItems(src, btnId) { document.querySelectorAll('.item-checkbox').forEach(c => c.checked = src.checked); checkSelection(btnId); }
-        async function deleteSelected(type) { const chk = document.querySelectorAll('.item-checkbox:checked'); if(chk.length === 0) return; if(!confirm(`ลบ ${chk.length} รายการ?`)) return; showLoading(); for(let c of chk) { await apiCall(type==='event'?'deleteEvent':'deleteItem', {id:c.value}, false); } hideLoading(); await refreshData(); router(currentView); }
-        async function approveUser(u) { if(confirm('อนุมัติ?')) { await apiCall('approveUser',{username:u}); router('users'); } }
-        async function deleteUser(u) { if(confirm('ลบ?')) { await apiCall('deleteUser',{username:u}); router('users'); } }
-        async function toggleUserPermission(u,t,v) { await apiCall('toggleUserPermission',{username:u, type:t, value:v}); }
-        async function handleDisposeItem(id) { if(confirm('ยืนยัน?')) { await apiCall('disposeItem',{id}); refreshData(); router(currentView); } }
-        async function deleteItem(id) { if(confirm('ลบ?')) { await apiCall('deleteItem',{id}); refreshData(); router(currentView); } }
-        async function deleteEvent(id) { if(confirm('ลบ?')) { await apiCall('deleteEvent',{id}); refreshData(); router('history'); } }
-        function logout() { localStorage.removeItem('soilAppUser'); location.reload(); }
-        function exportViewXLSX() { const wb = XLSX.utils.book_new(); const ws = XLSX.utils.json_to_sheet(currentView==='history'?events:items); XLSX.utils.book_append_sheet(wb, ws, "Data"); XLSX.writeFile(wb, `${currentView}.xlsx`); }
 
         // --- INIT ---
         function init() {
@@ -892,7 +523,7 @@
             const u = localStorage.getItem('soilAppUser');
             if(u) { try { currentUser=JSON.parse(u); document.getElementById('login-screen').classList.add('hidden'); updateNavAndRedirect(); } catch(e) { localStorage.removeItem('soilAppUser'); } }
         }
-        
+
         window.onload = init;
     </script>
 </body>
